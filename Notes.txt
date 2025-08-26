@@ -1,0 +1,41 @@
+project/
+├── client/       (React frontend)
+│   ├── public/
+│   ├── src/
+│   │   ├── components/  (Reusable UI components)
+│   │   ├── pages/       (Top-level page components)
+│   │   ├── services/    (API calls, e.g., axios)
+│   │   ├── hooks/       (Custom React hooks)
+│   │   ├── context/     (React Context API for state management)
+│   │   ├── utils/       (Utility functions)
+│   │   ├── App.js
+│   │   └── index.js
+│   └── package.json
+│
+├── server/       (Node.js/Express backend)
+│   ├── config/   (Database connection, environment variables)
+│   ├── controllers/ (Request handlers)
+│   ├── models/   (Database schemas, e.g., Mongoose)
+│   ├── routes/   (API route definitions)
+│   ├── middleware/ (Authentication, logging)
+│   ├── services/ (Business logic, payment gateway integrations)
+│   ├── utils/    (Helper functions)
+│   ├── server.js (Main Express application file)
+│   └── package.json
+│
+├── .env          (Environment variables)
+├── README.md     (Project documentation)
+└── .gitignore    (Files and folders to ignore in Git)
+
+npm create vite@latest
+cd client
+npm install
+npm run dev
+
+npm init -y
+npm install express mongoose
+npm i cors
+npm install dotenv
+node server.js
+
+npm install axios

@@ -5,7 +5,7 @@ function MessagePopup({ message, onClose }) {
 
   return (
     // Backdrop for the modal
-    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+    <div className="fixed inset-0 bg-black/50 bg-opacity-50 flex items-center justify-center z-50 p-4">
       {/* Modal content */}
       <div className="bg-white rounded-xl shadow-lg p-6 sm:p-8 w-full max-w-sm text-center">
         <p className="text-lg text-gray-800 mb-6">{message}</p>

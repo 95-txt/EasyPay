@@ -1,112 +1,80 @@
 import React, { useState, useEffect } from "react";
-import AddMoneyPopup from "../../components/AddMoneyPopup";
 import { useNavigate } from "react-router-dom";
-import axios from "axios";
+import axios from "../../utils/axiosInstance"; // central instance
+import AddMoneyPopup from "../../components/AddMoneyPopup";
 
 function Home() {
   const navigate = useNavigate();
-  // State for user and transactions
   const [user, setUser] = useState(null);
   const [transactions, setTransactions] = useState([]);
-  const [loading, setLoading] = useState(true);
-
-  // Notifications for incoming requests and request status changes
   const [notifications, setNotifications] = useState([]);
-  const [hasUnread, setHasUnread] = useState(false);
-
-  // Fetch user, transactions, and all users on mount
   const [allUsers, setAllUsers] = useState([]);
-  useEffect(() => {
-    const stored = localStorage.getItem("user");
-    if (!stored) {
-      setLoading(false);
-      return;
-    }
-    const { upi_id } = JSON.parse(stored);
-    if (!upi_id) {
-      setLoading(false);
-      return;
-    }
-    // Fetch user
-    axios
-      .get(`http://localhost:5000/user/${upi_id}`)
-      .then((res) => setUser(res.data))
-      .catch(() => {
-        setUser(null);
-        setLoading(false);
-        navigate("/login");
-      });
-    // Fetch transactions
-    axios
-      .get(`http://localhost:5000/transaction/${upi_id}`)
-      .then((res) => setTransactions(res.data))
-      .catch(() => setTransactions([]))
-      .finally(() => setLoading(false));
-    // Fetch all users for name lookup
-    axios
-      .get("http://localhost:5000/user/all")
-      .then((res) => setAllUsers(res.data))
-      .catch(() => setAllUsers([]));
-    // Fetch all requests and filter for incoming & pending
-    axios
-      .get(`http://localhost:5000/request/${upi_id}`)
-      .then((res) => {
-        // incoming: target_upi_id is current user, status pending
-        const incoming = res.data.filter(
-          (r) => r.target_upi_id === upi_id && r.status === "pending"
-        );
-        // status notifications: requests made by user that are now accepted/rejected
-        const statusNotifs = res.data
-          .filter(
-            (r) =>
-              r.requester_upi_id === upi_id &&
-              (r.status === "accepted" || r.status === "declined") &&
-              !r.notified // Only show if not already notified (optional, if you want to avoid duplicates)
-          )
-          .map((r) => ({
-            ...r,
-            _notifType: "status",
-          }));
-        // Mark as notified (optional, requires backend update)
-        setNotifications([...incoming, ...statusNotifs]);
-        setHasUnread(incoming.length > 0 || statusNotifs.length > 0);
-      })
-      .catch(() => {
-        setNotifications([]);
-        setHasUnread(false);
-      });
-  }, [navigate]);
-
+  const [loading, setLoading] = useState(true);
   const [showBalance, setShowBalance] = useState(false);
   const [showTransactions, setShowTransactions] = useState(false);
   const [search, setSearch] = useState("");
   const [showNotifications, setShowNotifications] = useState(false);
   const [showAddMoney, setShowAddMoney] = useState(false);
 
+  useEffect(() => {
+    const fetchData = async () => {
+      try {
+        const resUser = await axios.get("/user/me");
+        setUser(resUser.data);
+
+        const upi_id = resUser.data.upi_id;
+
+        const [txRes, usersRes, reqRes] = await Promise.all([
+          axios.get(`/transaction/${upi_id}`),
+          axios.get("/user/all"),
+          axios.get(`/request/${upi_id}`),
+        ]);
+
+        setTransactions(txRes.data || []);
+        setAllUsers(usersRes.data || []);
+
+        // notifications: incoming + status updates
+        const incoming = reqRes.data.filter(
+          (r) => r.target_upi_id === upi_id && r.status === "pending"
+        );
+        const statusNotifs = reqRes.data
+          .filter(
+            (r) =>
+              r.requester_upi_id === upi_id &&
+              ["accepted", "declined"].includes(r.status) &&
+              !r.notified
+          )
+          .map((r) => ({ ...r, _notifType: "status" }));
+
+        setNotifications([...incoming, ...statusNotifs]);
+      } catch (err) {
+        console.error(err);
+        localStorage.removeItem("token");
+        navigate("/auth/login");
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchData();
+  }, [navigate]);
+
   const handleLogout = () => {
-    // Clear user data from localStorage and redirect to login
-    localStorage.removeItem("user");
-    // Optionally clear all localStorage: localStorage.clear();
+    localStorage.removeItem("token");
     navigate("/auth/login");
   };
 
-  // Filter transactions by search
+  // filter transactions
   const filteredTransactions = transactions.filter(
     (t) =>
       (t.description?.toLowerCase() || "").includes(search.toLowerCase()) ||
       (t.type?.toLowerCase() || "").includes(search.toLowerCase())
   );
+  const hasUnread = notifications.length > 0;
 
-  if (loading) {
-    return (
-      <div className="flex items-center justify-center min-h-screen bg-gray-100">
-        <span className="text-gray-500 text-lg">Loading...</span>
-      </div>
-    );
-  }
-  if (!user) {
-    return null;
-  }
+  if (loading) return <div>Loading...</div>;
+  if (!user) return null;
+
   return (
     <div className="flex flex-col items-center min-h-screen bg-gray-100 p-4 sm:p-6 md:p-8">
       {/* Top bar: Profile, Greeting, Settings, Logout */}

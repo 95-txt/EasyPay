@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from "react";
-import axios from "axios";
+import axios from "../../utils/axiosInstance";
+import { toast } from "react-hot-toast";
 
 function Requests() {
   const [tab, setTab] = useState("upi");
@@ -13,30 +14,31 @@ function Requests() {
   const [requests, setRequests] = useState([]);
   const [loading, setLoading] = useState(true);
 
-  // Helper to fetch requests for current user
+  const currentUpi = JSON.parse(localStorage.getItem("user"))?.upi_id;
+
+  // Fetch all users (for search by name/email)
+  useEffect(() => {
+    axios
+      .get("/user/all")
+      .then((res) => setAllUsers(res.data))
+      .catch(() => setAllUsers([]));
+    fetchRequests();
+  }, []);
+
+  // Fetch requests for logged-in user
   const fetchRequests = () => {
-    const stored = localStorage.getItem("user");
-    if (!stored) return;
-    const { upi_id } = JSON.parse(stored);
     setLoading(true);
     axios
-      .get(`http://localhost:5000/request/${upi_id}`)
+      .get("/request/me") // backend gets requester from token
       .then((res) => setRequests(res.data))
       .catch((err) => {
         setRequests([]);
         if (!(err.response && err.response.status === 404)) {
-          alert("Failed to fetch requests.");
+          toast.error("Failed to fetch requests.");
         }
       })
       .finally(() => setLoading(false));
   };
-
-  useEffect(() => {
-    axios
-      .get("http://localhost:5000/user/all")
-      .then((res) => setAllUsers(res.data));
-    fetchRequests();
-  }, []);
 
   const filteredUsers = allUsers
     .filter((u) =>
@@ -46,31 +48,26 @@ function Requests() {
 
   // Request money handler
   const handleRequest = async () => {
-    const stored = localStorage.getItem("user");
-    if (!stored) return alert("You must be logged in.");
-    const { upi_id: requester_upi_id } = JSON.parse(stored);
-    let target_upi_id = "";
-    if (tab === "upi") {
-      target_upi_id = upi.trim();
-    } else if (tab === "email") {
-      const user = allUsers.find((u) => u.email === email.trim());
-      if (!user) return alert("No user found with that email.");
-      target_upi_id = user.upi_id;
-    } else if (tab === "name") {
-      if (!selectedUser) return alert("Select a user to request money from.");
-      target_upi_id = selectedUser.upi_id;
-    }
-    if (!target_upi_id) return alert("Target UPI ID required.");
+    const receiver_upi_id =
+      tab === "upi"
+        ? upi.trim()
+        : tab === "email"
+        ? allUsers.find((u) => u.email === email.trim())?.upi_id
+        : selectedUser?.upi_id;
+
+    if (!receiver_upi_id) return toast.error("Target UPI ID required.");
     if (!amount || isNaN(amount) || Number(amount) <= 0)
-      return alert("Enter a valid amount.");
+      return toast.error("Enter a valid amount.");
+
     try {
-      await axios.post("http://localhost:5000/request", {
-        requester_upi_id,
-        target_upi_id,
+      setLoading(true);
+      await axios.post("/request", {
+        target_upi_id: receiver_upi_id,
         amount: Number(amount),
         note,
       });
-      alert("Request sent!");
+
+      toast.success("Request sent!");
       setUpi("");
       setEmail("");
       setAmount("");
@@ -79,60 +76,46 @@ function Requests() {
       setUserSearch("");
       fetchRequests();
     } catch (err) {
-      alert(err?.response?.data?.message || "Request failed");
+      toast.error(err?.response?.data?.message || "Request failed");
+    } finally {
+      setLoading(false);
     }
   };
 
-  // Accept/decline handler
+  // Accept/decline request handler
   const handleAction = async (requestId, status) => {
     try {
-      await axios.patch(`http://localhost:5000/request/${requestId}`, {
-        status,
-      });
+      await axios.patch(`/request/${requestId}`, { status });
       setRequests((reqs) =>
         reqs.map((r) => (r._id === requestId ? { ...r, status } : r))
       );
     } catch (err) {
-      alert("Failed to update request");
+      toast.error("Failed to update request");
     }
   };
 
   return (
     <div className="p-4 max-w-2xl mx-auto">
+      {/* Request Money Form */}
       <div className="bg-white rounded-xl shadow-lg p-6 w-full max-w-md mx-auto mb-8">
         <h2 className="text-xl font-bold mb-4">Request Money</h2>
         <div className="flex mb-4 rounded-lg overflow-hidden shadow-sm">
-          <button
-            className={`flex-1 py-2 font-semibold transition-colors duration-200 focus:outline-none ${
-              tab === "upi"
-                ? "bg-blue-600 text-white"
-                : "bg-gray-100 text-gray-700 hover:bg-blue-50"
-            }`}
-            onClick={() => setTab("upi")}
-          >
-            By UPI
-          </button>
-          <button
-            className={`flex-1 py-2 font-semibold transition-colors duration-200 focus:outline-none ${
-              tab === "email"
-                ? "bg-blue-600 text-white"
-                : "bg-gray-100 text-gray-700 hover:bg-blue-50"
-            }`}
-            onClick={() => setTab("email")}
-          >
-            By Email
-          </button>
-          <button
-            className={`flex-1 py-2 font-semibold transition-colors duration-200 focus:outline-none ${
-              tab === "name"
-                ? "bg-blue-600 text-white"
-                : "bg-gray-100 text-gray-700 hover:bg-blue-50"
-            }`}
-            onClick={() => setTab("name")}
-          >
-            By Name
-          </button>
+          {["upi", "email", "name"].map((t) => (
+            <button
+              key={t}
+              className={`flex-1 py-2 font-semibold transition-colors duration-200 focus:outline-none ${
+                tab === t
+                  ? "bg-blue-600 text-white"
+                  : "bg-gray-100 text-gray-700 hover:bg-blue-50"
+              }`}
+              onClick={() => setTab(t)}
+            >
+              {t === "upi" ? "By UPI" : t === "email" ? "By Email" : "By Name"}
+            </button>
+          ))}
         </div>
+
+        {/* Form Inputs */}
         {tab === "upi" && (
           <div>
             <input
@@ -158,6 +141,7 @@ function Requests() {
             />
           </div>
         )}
+
         {tab === "email" && (
           <div>
             <input
@@ -183,6 +167,7 @@ function Requests() {
             />
           </div>
         )}
+
         {tab === "name" && (
           <div>
             <input
@@ -197,12 +182,11 @@ function Requests() {
               {filteredUsers.map((u) => (
                 <div
                   key={u.upi_id}
-                  className={`flex items-center gap-3 px-3 py-2 cursor-pointer transition-colors duration-150 border-b last:border-b-0
-                    ${
-                      selectedUser?.upi_id === u.upi_id
-                        ? "bg-blue-100 border-blue-300"
-                        : "hover:bg-blue-50 border-transparent"
-                    }`}
+                  className={`flex items-center gap-3 px-3 py-2 cursor-pointer transition-colors duration-150 border-b last:border-b-0 ${
+                    selectedUser?.upi_id === u.upi_id
+                      ? "bg-blue-100 border-blue-300"
+                      : "hover:bg-blue-50 border-transparent"
+                  }`}
                   onClick={() => setSelectedUser(u)}
                 >
                   <div className="flex-shrink-0 h-8 w-8 rounded-full bg-blue-200 flex items-center justify-center font-bold text-blue-700 text-base">
@@ -241,13 +225,17 @@ function Requests() {
             />
           </div>
         )}
+
         <button
           className="w-full mt-2 py-3 bg-blue-600 text-white text-lg font-bold rounded-lg shadow-md hover:bg-blue-700 transition-colors duration-200"
           onClick={handleRequest}
+          disabled={loading}
         >
-          Request
+          {loading ? "Processing..." : "Request"}
         </button>
       </div>
+
+      {/* Incoming & Outgoing Requests */}
       <div className="bg-white rounded-xl shadow-lg p-6 w-full max-w-md mx-auto">
         <h2 className="text-xl font-bold mb-4">Incoming & Outgoing Requests</h2>
         {loading ? (
@@ -260,9 +248,7 @@ function Requests() {
               </div>
             ) : (
               requests.map((r) => {
-                const isIncoming =
-                  r.target_upi_id ===
-                  JSON.parse(localStorage.getItem("user")).upi_id;
+                const isIncoming = r.target_upi_id === currentUpi;
                 return (
                   <div
                     key={r._id}

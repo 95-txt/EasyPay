@@ -14,14 +14,21 @@ import Wallet from "./pages/dashboard/Wallet";
 import Requests from "./pages/dashboard/Requests.jsx";
 
 // Misc
+import LandingPage from "./pages/LandingPage";
 import NotFound from "./pages/NotFound";
 import NeedHelp from "./pages/NeedHelp.jsx";
+
+const isAuthenticated = !!localStorage.getItem("token");
 
 const router = createBrowserRouter([
   {
     path: "/",
     element: <App />,
     children: [
+      {
+        path: "",
+        element: isAuthenticated ? <Home /> : <LandingPage />,
+      },
       {
         path: "auth",
         children: [
@@ -40,8 +47,8 @@ const router = createBrowserRouter([
           { path: "requests", element: <Requests /> },
         ],
       },
-      { path: "*", element: <NotFound /> },
       { path: "support", element: <NeedHelp /> },
+      { path: "*", element: <NotFound /> },
     ],
   },
 ]);

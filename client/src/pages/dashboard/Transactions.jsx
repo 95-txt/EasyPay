@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from "react";
-import axios from "axios";
+import { toast } from "react-hot-toast";
+import axios from "../../utils/axiosInstance";
 
 function Transactions() {
   const [tab, setTab] = useState("upi");
@@ -10,12 +11,25 @@ function Transactions() {
   const [allUsers, setAllUsers] = useState([]);
   const [userSearch, setUserSearch] = useState("");
   const [selectedUser, setSelectedUser] = useState(null);
+  const [recent, setRecent] = useState([]);
+  const [showConfirm, setShowConfirm] = useState(false);
+  const [loading, setLoading] = useState(false);
 
   useEffect(() => {
     axios
-      .get("http://127.0.0.1:5000/user/all")
+      .get("/user/all")
       .then((res) => setAllUsers(res.data))
-      .catch(() => setAllUsers([]));
+      .catch((err) => {
+        if (err.response?.status === 401) {
+          alert("Please login again");
+          localStorage.removeItem("token");
+          window.location.href = "/login";
+        }
+        setAllUsers([]);
+      });
+
+    const stored = JSON.parse(localStorage.getItem("recentContacts") || "[]");
+    setRecent(stored);
   }, []);
 
   const filteredUsers = allUsers
@@ -24,42 +38,65 @@ function Transactions() {
     )
     .slice(0, 5);
 
-  // Function to send money based on selected tab
-  const sendMoney = async () => {
-    const stored = localStorage.getItem("user");
-    if (!stored) return alert("You must be logged in.");
-    const { upi_id: sender_upi_id } = JSON.parse(stored);
-    let receiver_upi_id = "";
-    if (tab === "upi") {
-      receiver_upi_id = upi.trim();
-      if (!receiver_upi_id) return alert("Enter a valid UPI ID.");
-    } else if (tab === "email") {
-      const user = allUsers.find((u) => u.email === email.trim());
-      if (!user) return alert("No user found with that email.");
-      receiver_upi_id = user.upi_id;
-    } else if (tab === "name") {
-      if (!selectedUser) return alert("Select a user to send money.");
-      receiver_upi_id = selectedUser.upi_id;
-    }
-    if (!receiver_upi_id) return alert("Receiver UPI ID required.");
+  // Helper to get receiver UPI ID
+  const getReceiverUpiId = () => {
+    if (tab === "upi") return upi.trim() || null;
+    if (tab === "email")
+      return (
+        allUsers.find((u) => u.email?.trim() === email.trim())?.upi_id || null
+      );
+    if (tab === "name") return selectedUser?.upi_id || null;
+    return null;
+  };
+
+  const handleTransaction = async () => {
+    const receiver_upi_id = getReceiverUpiId();
+    if (!receiver_upi_id) return toast.error("Receiver details are invalid.");
+
     if (!amount || isNaN(amount) || Number(amount) <= 0)
-      return alert("Enter a valid amount.");
+      return toast.error("Enter a valid amount.");
+
     try {
-      await axios.post("http://127.0.0.1:5000/transaction/", {
-        sender_upi_id,
+      setLoading(true);
+
+      await axios.post("/transaction/", {
         receiver_upi_id,
         amount: Number(amount),
         note,
       });
-      alert("Transaction successful!");
+      // Update recent contacts
+      const newContact = {
+        upi_id: receiver_upi_id,
+        note,
+        name: selectedUser?.name || email || upi,
+      };
+      const updated = [
+        newContact,
+        ...recent.filter((r) => r.upi_id !== receiver_upi_id),
+      ].slice(0, 5);
+      setRecent(updated);
+      localStorage.setItem("recentContacts", JSON.stringify(updated));
+
+      toast.success("Transaction successful!");
       setUpi("");
       setEmail("");
       setAmount("");
       setNote("");
       setSelectedUser(null);
       setUserSearch("");
+      setShowConfirm(false);
     } catch (err) {
-      alert(err?.response?.data?.message || "Transaction failed");
+      if (err?.response?.status === 401) {
+        toast.error("Session expired. Please log in again.");
+        localStorage.clear();
+        window.location.href = "/login";
+      } else {
+        toast.error(
+          err?.response?.data?.message || "Transaction failed. Try again."
+        );
+      }
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -106,21 +143,27 @@ function Transactions() {
             <input
               type="text"
               placeholder="Enter UPI ID..."
-              className="w-full border-2 border-blue-200 rounded-lg px-4 py-3 mb-3 focus:ring-2 focus:ring-blue-400 focus:outline-none transition"
+              className="w-full border-2 border-blue-200 rounded-lg px-4 py-3 mb-3 
+              focus:ring-2 focus:ring-blue-400 focus:outline-none transition 
+              bg-white dark:bg-gray-700 dark:text-white"
               value={upi}
               onChange={(e) => setUpi(e.target.value)}
             />
             <input
               type="number"
               placeholder="Enter amount..."
-              className="w-full border-2 border-blue-200 rounded-lg px-4 py-3 mb-3 focus:ring-2 focus:ring-blue-400 focus:outline-none transition"
+              className="w-full border-2 border-blue-200 rounded-lg px-4 py-3 mb-3 
+              focus:ring-2 focus:ring-blue-400 focus:outline-none transition 
+              bg-white dark:bg-gray-700 dark:text-white"
               value={amount}
               onChange={(e) => setAmount(e.target.value)}
             />
             <input
               type="text"
               placeholder="Add a note (optional)"
-              className="w-full border-2 border-blue-200 rounded-lg px-4 py-3 mb-3 focus:ring-2 focus:ring-blue-400 focus:outline-none transition"
+              className="w-full border-2 border-blue-200 rounded-lg px-4 py-3 mb-3 
+              focus:ring-2 focus:ring-blue-400 focus:outline-none transition 
+              bg-white dark:bg-gray-700 dark:text-white"
               value={note}
               onChange={(e) => setNote(e.target.value)}
             />
@@ -133,21 +176,27 @@ function Transactions() {
             <input
               type="email"
               placeholder="Enter email..."
-              className="w-full border-2 border-blue-200 rounded-lg px-4 py-3 mb-3 focus:ring-2 focus:ring-blue-400 focus:outline-none transition"
+              className="w-full border-2 border-blue-200 rounded-lg px-4 py-3 mb-3 
+              focus:ring-2 focus:ring-blue-400 focus:outline-none transition 
+              bg-white dark:bg-gray-700 dark:text-white"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
             />
             <input
               type="number"
               placeholder="Enter amount..."
-              className="w-full border-2 border-blue-200 rounded-lg px-4 py-3 mb-3 focus:ring-2 focus:ring-blue-400 focus:outline-none transition"
+              className="w-full border-2 border-blue-200 rounded-lg px-4 py-3 mb-3 
+              focus:ring-2 focus:ring-blue-400 focus:outline-none transition 
+              bg-white dark:bg-gray-700 dark:text-white"
               value={amount}
               onChange={(e) => setAmount(e.target.value)}
             />
             <input
               type="text"
               placeholder="Add a note (optional)"
-              className="w-full border-2 border-blue-200 rounded-lg px-4 py-3 mb-3 focus:ring-2 focus:ring-blue-400 focus:outline-none transition"
+              className="w-full border-2 border-blue-200 rounded-lg px-4 py-3 mb-3 
+              focus:ring-2 focus:ring-blue-400 focus:outline-none transition 
+              bg-white dark:bg-gray-700 dark:text-white"
               value={note}
               onChange={(e) => setNote(e.target.value)}
             />
@@ -160,7 +209,9 @@ function Transactions() {
             <input
               type="text"
               placeholder="Search users by name..."
-              className="w-full border-2 border-blue-200 rounded-lg px-4 py-3 mb-3 focus:ring-2 focus:ring-blue-400 focus:outline-none transition"
+              className="w-full border-2 border-blue-200 rounded-lg px-4 py-3 mb-3 
+              focus:ring-2 focus:ring-blue-400 focus:outline-none transition 
+              bg-white dark:bg-gray-700 dark:text-white"
               value={userSearch}
               onChange={(e) => setUserSearch(e.target.value)}
               autoFocus
@@ -200,27 +251,87 @@ function Transactions() {
             <input
               type="number"
               placeholder="Enter amount..."
-              className="w-full border-2 border-blue-200 rounded-lg px-4 py-3 mb-3 mt-2 focus:ring-2 focus:ring-blue-400 focus:outline-none transition"
+              className="w-full border-2 border-blue-200 rounded-lg px-4 py-3 mb-3 mt-2 
+              focus:ring-2 focus:ring-blue-400 focus:outline-none transition 
+              bg-white dark:bg-gray-700 dark:text-white"
               value={amount}
               onChange={(e) => setAmount(e.target.value)}
             />
             <input
               type="text"
               placeholder="Add a note (optional)"
-              className="w-full border-2 border-blue-200 rounded-lg px-4 py-3 mb-3 focus:ring-2 focus:ring-blue-400 focus:outline-none transition"
+              className="w-full border-2 border-blue-200 rounded-lg px-4 py-3 mb-3 
+              focus:ring-2 focus:ring-blue-400 focus:outline-none transition 
+              bg-white dark:bg-gray-700 dark:text-white"
               value={note}
               onChange={(e) => setNote(e.target.value)}
             />
           </div>
         )}
-        {/* Send Button at the bottom */}
+
+        {/* Recent Contacts */}
+        {recent.length > 0 && (
+          <div className="mt-4">
+            <h3 className="font-semibold mb-2">Recent Contacts</h3>
+            <div className="flex gap-2 overflow-x-auto">
+              {recent.map((r) => (
+                <div
+                  key={r.upi_id}
+                  className="px-3 py-2 bg-blue-100 rounded-lg cursor-pointer hover:bg-blue-200"
+                  onClick={() => {
+                    setTab("upi");
+                    setUpi(r.upi_id);
+                  }}
+                >
+                  {r.upi_id}
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+
+        {/* Send Button */}
         <button
-          className="w-full mt-2 py-3 bg-blue-600 text-white text-lg font-bold rounded-lg shadow-md hover:bg-blue-700 transition-colors duration-200"
-          onClick={sendMoney}
+          className="w-full mt-4 py-3 bg-blue-600 text-white text-lg font-bold rounded-lg shadow-md hover:bg-blue-700 transition-colors duration-200"
+          onClick={() => setShowConfirm(true)}
         >
           Send
         </button>
       </div>
+
+      {/* Confirmation Modal */}
+      {showConfirm && (
+        <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50">
+          <div className="bg-white rounded-lg p-6 shadow-lg max-w-sm w-full">
+            <h3 className="text-lg font-bold mb-2">Confirm Transaction</h3>
+            <p className="mb-4">
+              Are you sure you want to send{" "}
+              <span className="font-semibold">₹{amount}</span> to{" "}
+              <span className="font-semibold">
+                {selectedUser?.name || upi || email}
+              </span>
+              ?
+            </p>
+            <div className="flex justify-end gap-2">
+              <button
+                className="px-4 py-2 bg-gray-300 rounded-lg hover:bg-gray-400"
+                onClick={() => setShowConfirm(false)}
+              >
+                Cancel
+              </button>
+              <button
+                type="button"
+                aria-busy={loading}
+                className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50"
+                onClick={handleTransaction}
+                disabled={loading}
+              >
+                {loading ? "Processing..." : "Confirm"}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

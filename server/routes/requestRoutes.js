@@ -1,12 +1,13 @@
 const express = require('express');
 const router = express.Router();
 const requestController = require('../controllers/requestController');
+const { authMiddleware } = require('../middleware/authMiddleware');
 
 // Create a new request
-router.post('/', requestController.createRequest);
-// Get all requests for a user (as requester or target)
-router.get('/:upi_id', requestController.getRequests);
+router.post('/', authMiddleware, requestController.createRequest);
+// Get all requests for logged-in user
+router.get('/me', authMiddleware, requestController.getRequests);
 // Update request status (accept/decline)
-router.patch('/:requestId', requestController.updateRequestStatus);
+router.patch('/:requestId', authMiddleware, requestController.updateRequestStatus);
 
 module.exports = router;

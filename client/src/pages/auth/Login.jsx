@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import axios from "../../utils/axiosInstance"; // ✅ use your custom instance
+import axios from "../../utils/axiosInstance"; // custom instance
 import MessagePopup from "../../components/MessagePopup";
 
 function Login() {
@@ -52,6 +52,8 @@ function Login() {
         </p>
 
         <input
+          autoComplete="email"
+          id="email"
           className="w-full h-12 px-4 mb-4 text-base bg-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
           type="email"
           placeholder="Email"
@@ -59,6 +61,7 @@ function Login() {
           onChange={(e) => setEmail(e.target.value)}
         />
         <input
+          id="password"
           className="w-full h-12 px-4 mb-6 text-base bg-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
           type="password"
           placeholder="Password"

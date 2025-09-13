@@ -23,7 +23,7 @@ function Transactions() {
         if (err.response?.status === 401) {
           alert("Please login again");
           localStorage.removeItem("token");
-          window.location.href = "/login";
+          window.location.href = "/auth/login";
         }
         setAllUsers([]);
       });
@@ -141,6 +141,7 @@ function Transactions() {
         {tab === "upi" && (
           <div>
             <input
+              id="upi"
               type="text"
               placeholder="Enter UPI ID..."
               className="w-full border-2 border-blue-200 rounded-lg px-4 py-3 mb-3 
@@ -150,6 +151,7 @@ function Transactions() {
               onChange={(e) => setUpi(e.target.value)}
             />
             <input
+              id="amount"
               type="number"
               placeholder="Enter amount..."
               className="w-full border-2 border-blue-200 rounded-lg px-4 py-3 mb-3 
@@ -159,6 +161,7 @@ function Transactions() {
               onChange={(e) => setAmount(e.target.value)}
             />
             <input
+              id="note"
               type="text"
               placeholder="Add a note (optional)"
               className="w-full border-2 border-blue-200 rounded-lg px-4 py-3 mb-3 
@@ -169,11 +172,10 @@ function Transactions() {
             />
           </div>
         )}
-
-        {/* Email Tab */}
         {tab === "email" && (
           <div>
             <input
+              id="mail"
               type="email"
               placeholder="Enter email..."
               className="w-full border-2 border-blue-200 rounded-lg px-4 py-3 mb-3 
@@ -183,6 +185,7 @@ function Transactions() {
               onChange={(e) => setEmail(e.target.value)}
             />
             <input
+              id="amount"
               type="number"
               placeholder="Enter amount..."
               className="w-full border-2 border-blue-200 rounded-lg px-4 py-3 mb-3 
@@ -192,6 +195,7 @@ function Transactions() {
               onChange={(e) => setAmount(e.target.value)}
             />
             <input
+              id="note"
               type="text"
               placeholder="Add a note (optional)"
               className="w-full border-2 border-blue-200 rounded-lg px-4 py-3 mb-3 
@@ -202,11 +206,10 @@ function Transactions() {
             />
           </div>
         )}
-
-        {/* Name Tab */}
         {tab === "name" && (
           <div>
             <input
+              id="nameid"
               type="text"
               placeholder="Search users by name..."
               className="w-full border-2 border-blue-200 rounded-lg px-4 py-3 mb-3 
@@ -249,6 +252,7 @@ function Transactions() {
               </div>
             )}
             <input
+              id="amount"
               type="number"
               placeholder="Enter amount..."
               className="w-full border-2 border-blue-200 rounded-lg px-4 py-3 mb-3 mt-2 
@@ -258,6 +262,7 @@ function Transactions() {
               onChange={(e) => setAmount(e.target.value)}
             />
             <input
+              id="note"
               type="text"
               placeholder="Add a note (optional)"
               className="w-full border-2 border-blue-200 rounded-lg px-4 py-3 mb-3 
@@ -290,7 +295,6 @@ function Transactions() {
           </div>
         )}
 
-        {/* Send Button */}
         <button
           className="w-full mt-4 py-3 bg-blue-600 text-white text-lg font-bold rounded-lg shadow-md hover:bg-blue-700 transition-colors duration-200"
           onClick={() => setShowConfirm(true)}

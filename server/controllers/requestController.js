@@ -1,9 +1,12 @@
 const Request = require('../models/requestmodel');
+const mongoose = require('mongoose');
 
 // Create a new money request
 exports.createRequest = async (req, res, next) => {
     try {
-        const { requester_upi_id, target_upi_id, amount, note } = req.body;
+        const { target_upi_id, amount, note } = req.body;
+        const requester_upi_id = req.user.upi_id;
+
         if (!requester_upi_id || !target_upi_id || !amount) {
             return res.status(400).json({ message: 'Missing required fields' });
         }

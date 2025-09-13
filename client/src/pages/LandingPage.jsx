@@ -14,7 +14,7 @@ const LandingPage = () => {
         {/* Login Button */}
         <button
           className="w-1/2 lg:w-1/5 h-12 flex items-center justify-center bg-blue-600 text-lg font-bold text-white rounded-lg shadow-md hover:bg-blue-700 transition-colors duration-200"
-          onClick={() => navigate("/dashboard")}
+          onClick={() => navigate("/auth/login")}
         >
           Get Started
         </button>

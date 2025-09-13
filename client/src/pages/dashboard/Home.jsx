@@ -2,8 +2,19 @@ import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import axios from "../../utils/axiosInstance"; // central instance
 import AddMoneyPopup from "../../components/AddMoneyPopup";
+import { jwtDecode } from "jwt-decode";
 
 function Home() {
+  // const token = localStorage.getItem("token");
+  // if (token) {
+  //   const decoded = jwtDecode(token);
+  //   const now = Math.floor(Date.now() / 1000); // current time in seconds
+  //   if (decoded.exp) {
+  //     const secondsLeft = decoded.exp - now;
+  //     //console.log("Token life left (minutes):", secondsLeft / 60);
+  //     // You can also convert to minutes/hours if needed
+  //   }
+  // }
   const navigate = useNavigate();
   const [user, setUser] = useState(null);
   const [transactions, setTransactions] = useState([]);
@@ -67,8 +78,15 @@ function Home() {
   // filter transactions
   const filteredTransactions = transactions.filter(
     (t) =>
-      (t.description?.toLowerCase() || "").includes(search.toLowerCase()) ||
-      (t.type?.toLowerCase() || "").includes(search.toLowerCase())
+      (t.note?.toLowerCase() || "").includes(search.toLowerCase()) ||
+      (t.sender_upi_id === user.upi_id
+        ? (t.receiver_upi_id?.toLowerCase().slice(0, 2) || "").includes(
+            search.toLowerCase()
+          )
+        : (t.sender_upi_id?.toLowerCase().slice(0, 2) || "").includes(
+            search.toLowerCase()
+          )) ||
+      (t.amount?.toString().toLowerCase() || "").includes(search.toLowerCase())
   );
   const hasUnread = notifications.length > 0;
 
@@ -129,7 +147,7 @@ function Home() {
               <path d="M320 64C306.7 64 296 74.7 296 88L296 97.7C214.6 109.3 152 179.4 152 264L152 278.5C152 316.2 142 353.2 123 385.8L101.1 423.2C97.8 429 96 435.5 96 442.2C96 463.1 112.9 480 133.8 480L506.2 480C527.1 480 544 463.1 544 442.2C544 435.5 542.2 428.9 538.9 423.2L517 385.7C498 353.1 488 316.1 488 278.4L488 263.9C488 179.3 425.4 109.2 344 97.6L344 87.9C344 74.6 333.3 63.9 320 63.9zM488.4 432L151.5 432L164.4 409.9C187.7 370 200 324.6 200 278.5L200 264C200 197.7 253.7 144 320 144C386.3 144 440 197.7 440 264L440 278.5C440 324.7 452.3 370 475.5 409.9L488.4 432zM252.1 528C262 556 288.7 576 320 576C351.3 576 378 556 387.9 528L252.1 528z" />
             </svg>
             {hasUnread && (
-              <span className="absolute top-1 right-1 block h-2 w-2 rounded-full bg-red-500 border-2 border-white"></span>
+              <span className="absolute top-1 right-1 block h-2 w-2 rounded-full bg-red-500 border-1 border-white"></span>
             )}
           </button>
           <button
@@ -341,8 +359,9 @@ function Home() {
           <h2 className="text-xl sm:text-2xl font-semibold text-gray-800">
             Recent Transactions
           </h2>
-          <div className="flex gap-2 items-center">
+          <div className="flex flex-wrap gap-2 items-center justify-between">
             <input
+              id="search"
               type="text"
               placeholder="Search transactions..."
               value={search}

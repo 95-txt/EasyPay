@@ -1,8 +1,7 @@
 const User = require('../models/usermodel');
 const Transaction = require('../models/transactionmodel');
-const mongoose = require('mongoose');
 
-// Create transaction (atomic)
+// Create transaction
 exports.createTransaction = async (req, res, next) => {
     try {
         const { receiver_upi_id, amount, note } = req.body;

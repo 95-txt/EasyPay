@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import axios from "axios";
-import signUpImage from "/images/signup.svg"; // Ensure path is correct
+import signUpImage from "/signup.svg"; // Ensure path is correct
 
 function Register() {
   const navigate = useNavigate();
@@ -38,7 +38,7 @@ function Register() {
   };
 
   return (
-    <div className="flex items-center justify-center min-h-screen bg-gray-100 p-4">
+    <div className="flex items-center justify-center min-h-screen p-4">
       <div className="flex w-full max-w-4xl overflow-hidden bg-white rounded-xl shadow-lg">
         {/* Form Section */}
         <div className="w-full p-8 md:w-1/2">

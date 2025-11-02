@@ -138,7 +138,7 @@ function Requests() {
   if (!user) return null;
 
   return (
-    <div className="p-4 max-w-2xl mx-auto">
+    <div className="p-4 max-w-2xl mx-auto h-screen content-center">
       <div className="bg-white rounded-xl shadow-lg p-6 w-full max-w-md mx-auto mb-8">
         <h2 className="text-xl font-bold mb-4">Request Money</h2>
         <div className="flex mb-4 rounded-lg overflow-hidden shadow-sm">

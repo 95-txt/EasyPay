@@ -94,9 +94,9 @@ function Home() {
   if (!user) return null;
 
   return (
-    <div className="flex flex-col items-center min-h-screen bg-gray-100 p-4 sm:p-6 md:p-8">
+    <div className="flex flex-col items-center min-h-screen p-4 sm:p-6 md:p-8 pb-12 justify-center">
       {/* Top bar: Profile, Greeting, Settings, Logout */}
-      <div className="w-full max-w-2xl flex flex-row justify-between items-center mb-4">
+      <div className="w-full max-w-2xl flex flex-row justify-between items-center mb-4 mt-14">
         {/* Greeting and profile photo: always left */}
         <div className="flex items-center gap-3">
           <div

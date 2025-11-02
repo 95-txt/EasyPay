@@ -101,8 +101,8 @@ function Transactions() {
   };
 
   return (
-    <div className="p-4 max-w-2xl mx-auto">
-      <div className="bg-white rounded-xl shadow-lg p-6 w-full max-w-md mx-auto mb-8">
+    <div className="p-4 max-w-2xl mx-auto h-screen content-center">
+      <div className="bg-white rounded-xl shadow-lg p-6 w-full max-w-md mx-auto">
         <h2 className="text-xl font-bold mb-4">Send Money</h2>
         <div className="flex mb-4 rounded-lg overflow-hidden shadow-sm">
           <button
@@ -146,7 +146,7 @@ function Transactions() {
               placeholder="Enter UPI ID..."
               className="w-full border-2 border-blue-200 rounded-lg px-4 py-3 mb-3 
               focus:ring-2 focus:ring-blue-400 focus:outline-none transition 
-              bg-white dark:bg-gray-700 dark:text-white"
+              bg-white "
               value={upi}
               onChange={(e) => setUpi(e.target.value)}
             />
@@ -156,7 +156,7 @@ function Transactions() {
               placeholder="Enter amount..."
               className="w-full border-2 border-blue-200 rounded-lg px-4 py-3 mb-3 
               focus:ring-2 focus:ring-blue-400 focus:outline-none transition 
-              bg-white dark:bg-gray-700 dark:text-white"
+              bg-white "
               value={amount}
               onChange={(e) => setAmount(e.target.value)}
             />
@@ -166,7 +166,7 @@ function Transactions() {
               placeholder="Add a note (optional)"
               className="w-full border-2 border-blue-200 rounded-lg px-4 py-3 mb-3 
               focus:ring-2 focus:ring-blue-400 focus:outline-none transition 
-              bg-white dark:bg-gray-700 dark:text-white"
+              bg-white "
               value={note}
               onChange={(e) => setNote(e.target.value)}
             />
@@ -180,7 +180,7 @@ function Transactions() {
               placeholder="Enter email..."
               className="w-full border-2 border-blue-200 rounded-lg px-4 py-3 mb-3 
               focus:ring-2 focus:ring-blue-400 focus:outline-none transition 
-              bg-white dark:bg-gray-700 dark:text-white"
+              bg-white "
               value={email}
               onChange={(e) => setEmail(e.target.value)}
             />
@@ -190,7 +190,7 @@ function Transactions() {
               placeholder="Enter amount..."
               className="w-full border-2 border-blue-200 rounded-lg px-4 py-3 mb-3 
               focus:ring-2 focus:ring-blue-400 focus:outline-none transition 
-              bg-white dark:bg-gray-700 dark:text-white"
+              bg-white "
               value={amount}
               onChange={(e) => setAmount(e.target.value)}
             />
@@ -200,7 +200,7 @@ function Transactions() {
               placeholder="Add a note (optional)"
               className="w-full border-2 border-blue-200 rounded-lg px-4 py-3 mb-3 
               focus:ring-2 focus:ring-blue-400 focus:outline-none transition 
-              bg-white dark:bg-gray-700 dark:text-white"
+              bg-white "
               value={note}
               onChange={(e) => setNote(e.target.value)}
             />
@@ -214,7 +214,7 @@ function Transactions() {
               placeholder="Search users by name..."
               className="w-full border-2 border-blue-200 rounded-lg px-4 py-3 mb-3 
               focus:ring-2 focus:ring-blue-400 focus:outline-none transition 
-              bg-white dark:bg-gray-700 dark:text-white"
+              bg-white "
               value={userSearch}
               onChange={(e) => setUserSearch(e.target.value)}
               autoFocus
@@ -257,7 +257,7 @@ function Transactions() {
               placeholder="Enter amount..."
               className="w-full border-2 border-blue-200 rounded-lg px-4 py-3 mb-3 mt-2 
               focus:ring-2 focus:ring-blue-400 focus:outline-none transition 
-              bg-white dark:bg-gray-700 dark:text-white"
+              bg-white "
               value={amount}
               onChange={(e) => setAmount(e.target.value)}
             />
@@ -267,7 +267,7 @@ function Transactions() {
               placeholder="Add a note (optional)"
               className="w-full border-2 border-blue-200 rounded-lg px-4 py-3 mb-3 
               focus:ring-2 focus:ring-blue-400 focus:outline-none transition 
-              bg-white dark:bg-gray-700 dark:text-white"
+              bg-white "
               value={note}
               onChange={(e) => setNote(e.target.value)}
             />
